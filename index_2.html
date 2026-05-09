@@ -1,0 +1,1738 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>ML Predictor — Supervised Learning Studio</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Syne:wght@400;700;800&display=swap" rel="stylesheet"/>
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --surface: #13131a;
+    --card: #1a1a24;
+    --border: #2a2a3a;
+    --accent: #00e5ff;
+    --accent2: #ff6b6b;
+    --accent3: #a259ff;
+    --text: #e8e8f0;
+    --muted: #6b6b80;
+    --green: #00e676;
+    --yellow: #ffd740;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Syne', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+  /* Animated grid background */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(0,229,255,0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,229,255,0.04) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  header {
+    position: relative;
+    z-index: 2;
+    padding: 2rem 3rem;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+  }
+  .logo-icon {
+    width: 44px; height: 44px;
+    background: linear-gradient(135deg, var(--accent), var(--accent3));
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.3rem; font-weight: 800; color: #000; letter-spacing: -1px;
+    flex-shrink: 0;
+  }
+  header h1 { font-size: 1.4rem; font-weight: 800; letter-spacing: -0.5px; }
+  header h1 span { color: var(--accent); }
+  header p { font-family: 'Space Mono', monospace; font-size: 0.65rem; color: var(--muted); margin-top: 2px; }
+
+  .badge {
+    margin-left: auto;
+    background: rgba(0,229,255,0.1);
+    border: 1px solid rgba(0,229,255,0.3);
+    color: var(--accent);
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.6rem;
+    letter-spacing: 1px;
+  }
+
+  .container {
+    position: relative;
+    z-index: 1;
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 2rem 3rem 4rem;
+  }
+
+  /* Tabs */
+  .tabs {
+    display: flex;
+    gap: 4px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 4px;
+    margin-bottom: 2rem;
+    width: fit-content;
+  }
+  .tab-btn {
+    padding: 8px 20px;
+    background: transparent;
+    border: none;
+    color: var(--muted);
+    cursor: pointer;
+    border-radius: 8px;
+    font-family: 'Syne', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 700;
+    transition: all 0.2s;
+    white-space: nowrap;
+  }
+  .tab-btn.active {
+    background: var(--card);
+    color: var(--accent);
+    box-shadow: 0 0 20px rgba(0,229,255,0.1);
+  }
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  /* Cards */
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+  }
+  .card-title {
+    font-size: 0.7rem;
+    font-family: 'Space Mono', monospace;
+    color: var(--accent);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .card-title::before {
+    content: '';
+    width: 3px; height: 14px;
+    background: var(--accent);
+    border-radius: 2px;
+    display: block;
+  }
+
+  /* Grid layouts */
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+  .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; }
+  @media (max-width: 900px) {
+    .grid-2, .grid-3 { grid-template-columns: 1fr; }
+    .container, header { padding-left: 1.2rem; padding-right: 1.2rem; }
+  }
+
+  /* Form controls */
+  label {
+    display: block;
+    font-size: 0.75rem;
+    color: var(--muted);
+    font-family: 'Space Mono', monospace;
+    margin-bottom: 6px;
+  }
+  select, input[type=range], input[type=number], input[type=text] {
+    width: 100%;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text);
+    border-radius: 8px;
+    padding: 8px 12px;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.8rem;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  select:focus, input:focus { border-color: var(--accent); }
+  input[type=range] {
+    padding: 4px;
+    accent-color: var(--accent);
+    cursor: pointer;
+  }
+  .range-row { display: flex; align-items: center; gap: 10px; }
+  .range-val {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.8rem;
+    color: var(--accent);
+    min-width: 38px;
+    text-align: right;
+  }
+  .form-group { margin-bottom: 1rem; }
+
+  /* Buttons */
+  .btn {
+    background: linear-gradient(135deg, var(--accent), #00b4cc);
+    border: none;
+    color: #000;
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 0.9rem;
+    padding: 12px 28px;
+    border-radius: 10px;
+    cursor: pointer;
+    letter-spacing: 0.5px;
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .btn:hover { transform: translateY(-1px); box-shadow: 0 8px 24px rgba(0,229,255,0.3); }
+  .btn:active { transform: translateY(0); }
+  .btn-ghost {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text);
+    box-shadow: none;
+  }
+  .btn-ghost:hover { border-color: var(--accent); color: var(--accent); box-shadow: none; }
+
+  /* Metric pills */
+  .metrics-row { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 1.5rem; }
+  .metric {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 12px 20px;
+    text-align: center;
+    flex: 1;
+    min-width: 120px;
+  }
+  .metric-val {
+    font-size: 1.6rem;
+    font-weight: 800;
+    color: var(--accent);
+    display: block;
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+  .metric-val.green { color: var(--green); }
+  .metric-val.yellow { color: var(--yellow); }
+  .metric-val.pink { color: var(--accent2); }
+  .metric-val.purple { color: var(--accent3); }
+  .metric-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.6rem;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+
+  /* Loading spinner */
+  .spinner {
+    display: inline-block;
+    width: 16px; height: 16px;
+    border: 2px solid rgba(0,0,0,0.3);
+    border-top-color: #000;
+    border-radius: 50%;
+    animation: spin 0.6s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* Canvas containers */
+  .canvas-wrap {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1rem;
+    position: relative;
+  }
+  canvas { display: block; max-width: 100%; }
+
+  /* Log console */
+  .log-console {
+    background: #080810;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1rem;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.7rem;
+    line-height: 1.8;
+    max-height: 220px;
+    overflow-y: auto;
+    color: var(--green);
+  }
+  .log-line { opacity: 0; animation: fadeIn 0.3s forwards; }
+  @keyframes fadeIn { to { opacity: 1; } }
+  .log-info { color: var(--accent); }
+  .log-warn { color: var(--yellow); }
+  .log-error { color: var(--accent2); }
+  .log-success { color: var(--green); }
+
+  /* Dataset preview table */
+  .data-table-wrap { overflow-x: auto; }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.7rem;
+  }
+  th {
+    background: var(--surface);
+    color: var(--accent);
+    padding: 8px 12px;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+  td {
+    padding: 7px 12px;
+    border-bottom: 1px solid rgba(42,42,58,0.5);
+    color: var(--text);
+  }
+  tr:hover td { background: rgba(0,229,255,0.03); }
+
+  /* Feature importance bars */
+  .feat-bar-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 10px;
+  }
+  .feat-name {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.7rem;
+    color: var(--text);
+    width: 140px;
+    flex-shrink: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .feat-bar-bg {
+    flex: 1;
+    height: 8px;
+    background: var(--surface);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+  .feat-bar-fill {
+    height: 100%;
+    border-radius: 4px;
+    background: linear-gradient(90deg, var(--accent3), var(--accent));
+    transition: width 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .feat-pct {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.65rem;
+    color: var(--muted);
+    width: 36px;
+    text-align: right;
+  }
+
+  /* Prediction input panel */
+  .pred-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 1rem; }
+  .pred-result {
+    background: linear-gradient(135deg, rgba(0,229,255,0.1), rgba(162,89,255,0.1));
+    border: 1px solid rgba(0,229,255,0.3);
+    border-radius: 12px;
+    padding: 1.2rem;
+    text-align: center;
+    margin-top: 1rem;
+  }
+  .pred-result-val {
+    font-size: 2rem;
+    font-weight: 800;
+    color: var(--accent);
+    display: block;
+  }
+  .pred-result-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.65rem;
+    color: var(--muted);
+    margin-top: 4px;
+  }
+  .confidence-bar {
+    margin-top: 10px;
+    height: 6px;
+    background: var(--surface);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+  .confidence-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent3), var(--green));
+    border-radius: 3px;
+    transition: width 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  /* Tooltip */
+  .tooltip { position: relative; cursor: help; }
+  .tooltip:hover::after {
+    content: attr(data-tip);
+    position: absolute;
+    bottom: calc(100% + 6px);
+    left: 50%;
+    transform: translateX(-50%);
+    background: #222230;
+    color: var(--text);
+    font-family: 'Space Mono', monospace;
+    font-size: 0.65rem;
+    padding: 6px 10px;
+    border-radius: 6px;
+    white-space: nowrap;
+    border: 1px solid var(--border);
+    z-index: 10;
+  }
+
+  .section-title {
+    font-size: 1.2rem;
+    font-weight: 800;
+    margin-bottom: 0.4rem;
+  }
+  .section-sub {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.65rem;
+    color: var(--muted);
+    margin-bottom: 1.5rem;
+  }
+
+  .algo-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-bottom: 1.5rem; }
+  @media(max-width:700px){ .algo-cards { grid-template-columns: 1fr; } }
+  .algo-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    user-select: none;
+  }
+  .algo-card:hover { border-color: var(--accent); }
+  .algo-card.selected {
+    border-color: var(--accent);
+    background: rgba(0,229,255,0.07);
+    box-shadow: 0 0 0 2px rgba(0,229,255,0.15);
+  }
+  .algo-card-name { font-weight: 800; font-size: 0.9rem; margin-bottom: 4px; }
+  .algo-card-type {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.6rem;
+    color: var(--accent3);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 8px;
+  }
+  .algo-card-desc { font-size: 0.75rem; color: var(--muted); line-height: 1.5; }
+
+  /* upload area */
+  .upload-zone {
+    border: 2px dashed var(--border);
+    border-radius: 12px;
+    padding: 2rem;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color 0.2s;
+  }
+  .upload-zone:hover { border-color: var(--accent); }
+  .upload-zone input { display: none; }
+  .upload-icon { font-size: 2rem; margin-bottom: 0.5rem; }
+  .upload-text { font-size: 0.8rem; color: var(--muted); font-family: 'Space Mono', monospace; }
+
+  .pill {
+    display: inline-block;
+    padding: 2px 10px;
+    border-radius: 20px;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.6rem;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+  }
+  .pill-blue { background: rgba(0,229,255,0.15); color: var(--accent); border: 1px solid rgba(0,229,255,0.3); }
+  .pill-green { background: rgba(0,230,118,0.15); color: var(--green); border: 1px solid rgba(0,230,118,0.3); }
+  .pill-purple { background: rgba(162,89,255,0.15); color: var(--accent3); border: 1px solid rgba(162,89,255,0.3); }
+
+  .chart-title {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.65rem;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    margin-bottom: 0.8rem;
+    text-align: center;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo-icon">ML</div>
+  <div>
+    <h1><span>Predictive</span> Modeling Studio</h1>
+    <p>SUPERVISED LEARNING · MODEL EVALUATION · VISUALIZATION</p>
+  </div>
+  <span class="badge">v1.0 · BROWSER ML</span>
+</header>
+
+<div class="container">
+  <!-- Tabs -->
+  <div class="tabs">
+    <button class="tab-btn active" onclick="switchTab('data')">① Data</button>
+    <button class="tab-btn" onclick="switchTab('model')">② Model</button>
+    <button class="tab-btn" onclick="switchTab('train')">③ Train & Evaluate</button>
+    <button class="tab-btn" onclick="switchTab('predict')">④ Predict</button>
+  </div>
+
+  <!-- TAB: DATA -->
+  <div class="tab-panel active" id="tab-data">
+    <div class="section-title">Dataset Setup</div>
+    <div class="section-sub">// Choose a built-in dataset or upload your own CSV</div>
+
+    <div class="grid-2">
+      <div>
+        <div class="card">
+          <div class="card-title">Built-in Datasets</div>
+          <div class="form-group">
+            <label>SELECT DATASET</label>
+            <select id="datasetSelect" onchange="loadDataset()">
+              <option value="iris">🌸 Iris Flowers (Classification)</option>
+              <option value="breast_cancer">🔬 Breast Cancer (Classification)</option>
+              <option value="diabetes">💉 Diabetes (Regression)</option>
+              <option value="wine">🍷 Wine Quality (Classification)</option>
+            </select>
+          </div>
+          <div id="datasetInfo" style="margin-top:1rem;"></div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Upload CSV</div>
+          <div class="upload-zone" onclick="document.getElementById('csvFile').click()">
+            <input type="file" id="csvFile" accept=".csv" onchange="loadCSV(event)"/>
+            <div class="upload-icon">📂</div>
+            <div class="upload-text">Click to upload CSV file<br>First row = headers · Last col = target</div>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div class="card" style="height:100%">
+          <div class="card-title">Data Preview</div>
+          <div id="dataPreview">
+            <p style="color:var(--muted);font-family:'Space Mono',monospace;font-size:0.75rem;">Load a dataset to preview...</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Feature Distribution</div>
+      <div class="canvas-wrap">
+        <div class="chart-title">FEATURE HISTOGRAMS</div>
+        <canvas id="distChart" height="160"></canvas>
+      </div>
+    </div>
+
+    <div style="text-align:right">
+      <button class="btn" onclick="switchTab('model')">Next: Choose Model →</button>
+    </div>
+  </div>
+
+  <!-- TAB: MODEL -->
+  <div class="tab-panel" id="tab-model">
+    <div class="section-title">Algorithm Selection</div>
+    <div class="section-sub">// Choose an algorithm that fits your problem type</div>
+
+    <div class="algo-cards">
+      <div class="algo-card selected" id="algoCard-lr" onclick="selectAlgo('lr')">
+        <div class="algo-card-name">Linear / Logistic Regression</div>
+        <div class="algo-card-type">📈 Regression · Classification</div>
+        <div class="algo-card-desc">Fast, interpretable baseline. Assumes linear relationship between features and target.</div>
+      </div>
+      <div class="algo-card" id="algoCard-dt" onclick="selectAlgo('dt')">
+        <div class="algo-card-name">Decision Tree</div>
+        <div class="algo-card-type">🌳 Regression · Classification</div>
+        <div class="algo-card-desc">Recursive feature splits. Highly interpretable. Prone to overfitting without pruning.</div>
+      </div>
+      <div class="algo-card" id="algoCard-rf" onclick="selectAlgo('rf')">
+        <div class="algo-card-name">Random Forest</div>
+        <div class="algo-card-type">🌲 Regression · Classification</div>
+        <div class="algo-card-desc">Ensemble of decision trees with bagging. Robust and high accuracy out of the box.</div>
+      </div>
+    </div>
+
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-title">Hyperparameters</div>
+        <div id="hyperparams"><!-- filled by JS --></div>
+      </div>
+      <div class="card">
+        <div class="card-title">Train / Test Split</div>
+        <div class="form-group">
+          <label>TEST SIZE</label>
+          <div class="range-row">
+            <input type="range" id="testSize" min="10" max="40" value="20" oninput="document.getElementById('testSizeVal').textContent=this.value+'%'"/>
+            <span class="range-val" id="testSizeVal">20%</span>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>RANDOM SEED</label>
+          <input type="number" id="randomSeed" value="42" min="0" max="9999"/>
+        </div>
+        <div class="form-group">
+          <label>CROSS-VALIDATION FOLDS</label>
+          <div class="range-row">
+            <input type="range" id="cvFolds" min="2" max="10" value="5" oninput="document.getElementById('cvVal').textContent=this.value"/>
+            <span class="range-val" id="cvVal">5</span>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>FEATURE SCALING</label>
+          <select id="scalingMethod">
+            <option value="none">None</option>
+            <option value="standard" selected>Standardization (Z-score)</option>
+            <option value="minmax">Min-Max Normalization</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div style="text-align:right">
+      <button class="btn" onclick="switchTab('data')" style="margin-right:10px;" class="btn-ghost">← Back</button>
+      <button class="btn" onclick="switchTab('train')">Next: Train & Evaluate →</button>
+    </div>
+  </div>
+
+  <!-- TAB: TRAIN -->
+  <div class="tab-panel" id="tab-train">
+    <div class="section-title">Train & Evaluate</div>
+    <div class="section-sub">// Train the model and inspect performance metrics + visualizations</div>
+
+    <div class="card">
+      <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+        <button class="btn" id="trainBtn" onclick="trainModel()">
+          <span>▶ Train Model</span>
+        </button>
+        <div id="trainStatus" style="font-family:'Space Mono',monospace;font-size:0.75rem;color:var(--muted);"></div>
+      </div>
+
+      <div class="log-console" id="logConsole" style="margin-top:1rem;">
+        <div class="log-line log-info">[ SYSTEM ] Ready. Configure dataset and model, then click Train.</div>
+      </div>
+    </div>
+
+    <div id="resultsSection" style="display:none;">
+      <div class="metrics-row" id="metricsRow"></div>
+
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-title">Confusion Matrix</div>
+          <div class="canvas-wrap">
+            <div class="chart-title" id="cmTitle">CONFUSION MATRIX</div>
+            <canvas id="cmCanvas" width="320" height="320"></canvas>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title">ROC Curve</div>
+          <div class="canvas-wrap">
+            <div class="chart-title">ROC CURVE (AUC)</div>
+            <canvas id="rocCanvas" width="320" height="320"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-title">Feature Importance</div>
+          <div id="featureImportance"></div>
+        </div>
+        <div class="card">
+          <div class="card-title">Learning Curve</div>
+          <div class="canvas-wrap">
+            <div class="chart-title">TRAIN vs VAL ACCURACY</div>
+            <canvas id="lcCanvas" width="320" height="220"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Cross-Validation Scores</div>
+        <div class="canvas-wrap">
+          <div class="chart-title">CV FOLD SCORES</div>
+          <canvas id="cvCanvas" height="120"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB: PREDICT -->
+  <div class="tab-panel" id="tab-predict">
+    <div class="section-title">Make Predictions</div>
+    <div class="section-sub">// Enter feature values to get a real-time prediction</div>
+
+    <div class="card">
+      <div id="predInputs">
+        <p style="color:var(--muted);font-family:'Space Mono',monospace;font-size:0.75rem;">Train a model first to enable predictions.</p>
+      </div>
+      <div id="predResult" style="display:none;"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ─── STATE ───────────────────────────────────────────────────────────────────
+let state = {
+  dataset: null,
+  featureNames: [],
+  targetName: '',
+  problemType: 'classification', // or 'regression'
+  classNames: [],
+  algo: 'lr',
+  trainedModel: null,
+  lastMetrics: null,
+};
+
+// ─── DATASETS ─────────────────────────────────────────────────────────────────
+const DATASETS = {
+  iris: {
+    name: 'Iris Flowers',
+    description: '150 samples · 4 features · 3 classes',
+    type: 'classification',
+    classes: ['Setosa', 'Versicolor', 'Virginica'],
+    features: ['sepal_length', 'sepal_width', 'petal_length', 'petal_width'],
+    target: 'species',
+    generate() {
+      const data = [];
+      // Approximate iris data using class means + noise
+      const means = [
+        [5.1,3.5,1.4,0.2,0],[6.0,2.8,4.7,1.5,1],[6.6,3.0,5.6,2.1,2]
+      ];
+      const stds = [[0.35,0.38,0.17,0.1],[0.5,0.3,0.65,0.3],[0.63,0.32,0.55,0.27]];
+      for(let c=0;c<3;c++) for(let i=0;i<50;i++) {
+        const row = {};
+        DATASETS.iris.features.forEach((f,fi)=>{
+          row[f] = +(means[c][fi] + randn()*stds[c][fi]).toFixed(2);
+        });
+        row['species'] = c;
+        data.push(row);
+      }
+      return data;
+    }
+  },
+  breast_cancer: {
+    name: 'Breast Cancer',
+    description: '569 samples · 6 features · 2 classes',
+    type: 'classification',
+    classes: ['Malignant', 'Benign'],
+    features: ['mean_radius','mean_texture','mean_perimeter','mean_area','mean_smoothness','mean_compactness'],
+    target: 'diagnosis',
+    generate() {
+      const data = [];
+      const means = {
+        0: [17.5,21.6,115,978,0.103,0.145],
+        1: [12.1,17.9,78.1,463,0.092,0.08]
+      };
+      const stds = {
+        0: [3.2,4.1,22,368,0.013,0.055],
+        1: [1.7,4.1,12,134,0.013,0.035]
+      };
+      const counts = {0:212, 1:357};
+      for(let c=0;c<2;c++) for(let i=0;i<counts[c];i++) {
+        const row = {};
+        DATASETS.breast_cancer.features.forEach((f,fi)=>{
+          row[f] = +(means[c][fi]+randn()*stds[c][fi]).toFixed(3);
+        });
+        row['diagnosis'] = c;
+        data.push(row);
+      }
+      return data;
+    }
+  },
+  diabetes: {
+    name: 'Diabetes',
+    description: '442 samples · 5 features · Continuous target',
+    type: 'regression',
+    classes: [],
+    features: ['age','bmi','blood_pressure','s1_serum','s2_ldl'],
+    target: 'progression',
+    generate() {
+      const data = [];
+      for(let i=0;i<442;i++) {
+        const age = 25+Math.random()*50;
+        const bmi = 18+Math.random()*22;
+        const bp = 60+Math.random()*60;
+        const s1 = 90+Math.random()*120;
+        const s2 = 50+Math.random()*110;
+        const progression = 50 + age*0.5 + bmi*4 + bp*0.2 + s1*0.1 + s2*0.05 + randn()*40;
+        data.push({age:+age.toFixed(1), bmi:+bmi.toFixed(1), blood_pressure:+bp.toFixed(1),
+          s1_serum:+s1.toFixed(1), s2_ldl:+s2.toFixed(1), progression:+progression.toFixed(1)});
+      }
+      return data;
+    }
+  },
+  wine: {
+    name: 'Wine Quality',
+    description: '178 samples · 5 features · 3 classes',
+    type: 'classification',
+    classes: ['Class 1','Class 2','Class 3'],
+    features: ['alcohol','malic_acid','ash','alcalinity','magnesium'],
+    target: 'wine_class',
+    generate() {
+      const data = [];
+      const means = [
+        [13.7,2.0,2.46,17.0,106],
+        [12.3,1.93,2.24,20.2,94.5],
+        [13.1,3.33,2.44,21.4,99.7]
+      ];
+      const stds = [[0.5,1.0,0.22,2.6,10],[0.6,1.0,0.32,3.3,17],[0.5,1.1,0.32,3.6,9]];
+      const counts = [59,71,48];
+      for(let c=0;c<3;c++) for(let i=0;i<counts[c];i++) {
+        const row = {};
+        DATASETS.wine.features.forEach((f,fi)=>{
+          row[f] = +(means[c][fi]+randn()*stds[c][fi]).toFixed(2);
+        });
+        row['wine_class'] = c;
+        data.push(row);
+      }
+      return data;
+    }
+  }
+};
+
+// ─── MATH UTILS ──────────────────────────────────────────────────────────────
+function randn() {
+  let u=0,v=0;
+  while(u===0) u=Math.random();
+  while(v===0) v=Math.random();
+  return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v);
+}
+function mean(arr) { return arr.reduce((a,b)=>a+b,0)/arr.length; }
+function std(arr) { const m=mean(arr); return Math.sqrt(arr.reduce((a,b)=>a+(b-m)**2,0)/arr.length); }
+function shuffle(arr, seed=42) {
+  const a=[...arr];
+  let s=seed;
+  function rng(){ s=(s*1664525+1013904223)&0xffffffff; return (s>>>0)/0xffffffff; }
+  for(let i=a.length-1;i>0;i--){const j=Math.floor(rng()*(i+1));[a[i],a[j]]=[a[j],a[i]];}
+  return a;
+}
+function argmax(arr) { return arr.indexOf(Math.max(...arr)); }
+function softmax(arr) {
+  const m=Math.max(...arr);
+  const e=arr.map(x=>Math.exp(x-m));
+  const s=e.reduce((a,b)=>a+b,0);
+  return e.map(x=>x/s);
+}
+
+// ─── PREPROCESSING ───────────────────────────────────────────────────────────
+function scale(X, method) {
+  if(method==='none') return { Xs:X, params:null };
+  const nf=X[0].length;
+  const params=[];
+  for(let j=0;j<nf;j++){
+    const col=X.map(r=>r[j]);
+    params.push({mean:mean(col),std:std(col)||1,min:Math.min(...col),max:Math.max(...col)});
+  }
+  const Xs=X.map(r=>r.map((v,j)=>{
+    const p=params[j];
+    if(method==='standard') return (v-p.mean)/p.std;
+    return (v-p.min)/((p.max-p.min)||1);
+  }));
+  return {Xs,params};
+}
+function scaleNew(x, params, method) {
+  if(!params) return x;
+  return x.map((v,j)=>{
+    const p=params[j];
+    if(method==='standard') return (v-p.mean)/p.std;
+    return (v-p.min)/((p.max-p.min)||1);
+  });
+}
+
+// ─── ALGORITHMS ──────────────────────────────────────────────────────────────
+
+// Logistic Regression (one-vs-rest, gradient descent)
+class LogisticRegression {
+  constructor({lr=0.1,epochs=300,C=1.0}={}) { this.lr=lr; this.epochs=epochs; this.C=C; }
+  sigmoid(z){ return 1/(1+Math.exp(-Math.max(-500,Math.min(500,z)))); }
+  train(X,y,nClasses) {
+    this.nClasses=nClasses;
+    const n=X.length, m=X[0].length;
+    this.weights=[];
+    this.biases=[];
+    for(let c=0;c<nClasses;c++){
+      const w=Array(m).fill(0).map(()=>randn()*0.01);
+      let b=0;
+      const yc=y.map(v=>v===c?1:0);
+      for(let e=0;e<this.epochs;e++){
+        const dw=Array(m).fill(0); let db=0;
+        for(let i=0;i<n;i++){
+          const z=X[i].reduce((s,v,j)=>s+v*w[j],b);
+          const p=this.sigmoid(z);
+          const err=p-yc[i];
+          X[i].forEach((v,j)=>dw[j]+=v*err);
+          db+=err;
+        }
+        w.forEach((v,j)=>{ w[j]-=this.lr*(dw[j]/n+this.C*v); });
+        b-=this.lr*db/n;
+      }
+      this.weights.push(w); this.biases.push(b);
+    }
+  }
+  predict(X){ return X.map(x=>argmax(this.weights.map((w,c)=>x.reduce((s,v,j)=>s+v*w[j],this.biases[c])))); }
+  predictProba(X){
+    return X.map(x=>{
+      const scores=this.weights.map((w,c)=>x.reduce((s,v,j)=>s+v*w[j],this.biases[c]));
+      return softmax(scores);
+    });
+  }
+  featureImportance(){
+    if(this.nClasses===2) return this.weights[0].map(Math.abs);
+    return this.weights[0].map((_,j)=>Math.max(...this.weights.map(w=>Math.abs(w[j]))));
+  }
+}
+
+// Linear Regression
+class LinearRegression {
+  constructor({lr=0.01,epochs=500}={}){ this.lr=lr; this.epochs=epochs; }
+  train(X,y){
+    const n=X.length, m=X[0].length;
+    this.w=Array(m).fill(0).map(()=>randn()*0.01);
+    this.b=0;
+    for(let e=0;e<this.epochs;e++){
+      const dw=Array(m).fill(0); let db=0;
+      for(let i=0;i<n;i++){
+        const pred=X[i].reduce((s,v,j)=>s+v*this.w[j],this.b);
+        const err=pred-y[i];
+        X[i].forEach((v,j)=>dw[j]+=v*err);
+        db+=err;
+      }
+      this.w.forEach((v,j)=>{ this.w[j]-=this.lr*dw[j]/n; });
+      this.b-=this.lr*db/n;
+    }
+  }
+  predict(X){ return X.map(x=>x.reduce((s,v,j)=>s+v*this.w[j],this.b)); }
+  featureImportance(){ return this.w.map(Math.abs); }
+}
+
+// Decision Tree Node
+class DTNode {
+  constructor(){ this.left=this.right=this.feat=this.thresh=this.val=this.proba=null; }
+}
+
+class DecisionTree {
+  constructor({maxDepth=5,minSamples=2,type='classification'}={}){
+    this.maxDepth=maxDepth; this.minSamples=minSamples; this.type=type;
+    this.importances=[];
+  }
+  gini(y,nC){
+    const c=Array(nC).fill(0); y.forEach(v=>c[v]++);
+    return 1-c.reduce((s,ci)=>s+(ci/y.length)**2,0);
+  }
+  mse(y){ const m=mean(y); return y.reduce((s,v)=>s+(v-m)**2,0)/y.length; }
+  bestSplit(X,y,nC){
+    let bestG=Infinity,bestF=-1,bestT=0;
+    const n=X.length;
+    for(let f=0;f<X[0].length;f++){
+      const vals=[...new Set(X.map(r=>r[f]))].sort((a,b)=>a-b);
+      for(let ti=0;ti<vals.length-1;ti++){
+        const t=(vals[ti]+vals[ti+1])/2;
+        const yl=y.filter((_,i)=>X[i][f]<=t);
+        const yr=y.filter((_,i)=>X[i][f]>t);
+        if(!yl.length||!yr.length) continue;
+        const imp = this.type==='regression'
+          ? (yl.length*this.mse(yl)+yr.length*this.mse(yr))/n
+          : (yl.length*this.gini(yl,nC)+yr.length*this.gini(yr,nC))/n;
+        if(imp<bestG){ bestG=imp; bestF=f; bestT=t; }
+      }
+    }
+    return {feat:bestF,thresh:bestT,gain:bestG};
+  }
+  buildNode(X,y,depth,nC){
+    const node=new DTNode();
+    if(this.type==='classification'){
+      const c=Array(nC).fill(0); y.forEach(v=>c[v]++);
+      node.proba=c.map(ci=>ci/y.length);
+      node.val=argmax(c);
+    } else { node.val=mean(y); }
+    if(depth>=this.maxDepth||y.length<this.minSamples) return node;
+    const {feat,thresh}=this.bestSplit(X,y,nC);
+    if(feat<0) return node;
+    this.importances[feat]=(this.importances[feat]||0)+1;
+    const li=X.map((_,i)=>i).filter(i=>X[i][feat]<=thresh);
+    const ri=X.map((_,i)=>i).filter(i=>X[i][feat]>thresh);
+    if(!li.length||!ri.length) return node;
+    node.feat=feat; node.thresh=thresh;
+    node.left=this.buildNode(li.map(i=>X[i]),li.map(i=>y[i]),depth+1,nC);
+    node.right=this.buildNode(ri.map(i=>X[i]),ri.map(i=>y[i]),depth+1,nC);
+    return node;
+  }
+  train(X,y,nClasses){
+    this.nClasses=nClasses||2;
+    this.importances=Array(X[0].length).fill(0);
+    this.root=this.buildNode(X,y,0,this.nClasses);
+  }
+  walkNode(node,x){
+    if(node.feat===null) return node;
+    return this.walkNode(x[node.feat]<=node.thresh?node.left:node.right,x);
+  }
+  predict(X){ return X.map(x=>this.walkNode(this.root,x).val); }
+  predictProba(X){ return X.map(x=>this.walkNode(this.root,x).proba||[0,1]); }
+  featureImportance(){
+    const s=this.importances.reduce((a,b)=>a+b,0)||1;
+    return this.importances.map(v=>v/s);
+  }
+}
+
+// Random Forest
+class RandomForest {
+  constructor({nTrees=50,maxDepth=6,maxFeatures=null,type='classification'}={}){
+    this.nTrees=nTrees; this.maxDepth=maxDepth; this.maxFeatures=maxFeatures; this.type=type;
+  }
+  subsample(X,y,seed){
+    const n=X.length; const idx=[];
+    let s=seed;
+    function rng(){ s=(s*1664525+1013904223)&0xffffffff; return (s>>>0)/0xffffffff; }
+    for(let i=0;i<n;i++) idx.push(Math.floor(rng()*n));
+    return {X:idx.map(i=>X[i]),y:idx.map(i=>y[i])};
+  }
+  train(X,y,nClasses){
+    this.nClasses=nClasses||2;
+    const nf=X[0].length;
+    const mf=this.maxFeatures||Math.max(1,Math.round(Math.sqrt(nf)));
+    this.trees=[];
+    this.featSets=[];
+    for(let t=0;t<this.nTrees;t++){
+      const feats=shuffle([...Array(nf).keys()],t*7).slice(0,mf).sort((a,b)=>a-b);
+      this.featSets.push(feats);
+      const {X:Xs,y:ys}=this.subsample(X,y,t*31+17);
+      const Xf=Xs.map(r=>feats.map(f=>r[f]));
+      const tree=new DecisionTree({maxDepth:this.maxDepth,type:this.type});
+      tree.train(Xf,ys,nClasses);
+      this.trees.push(tree);
+    }
+  }
+  predict(X){
+    if(this.type==='regression'){
+      return X.map(x=>{
+        const preds=this.trees.map((t,i)=>t.predict([this.featSets[i].map(f=>x[f])])[0]);
+        return mean(preds);
+      });
+    }
+    return X.map(x=>{
+      const votes=Array(this.nClasses).fill(0);
+      this.trees.forEach((t,i)=>{ votes[t.predict([this.featSets[i].map(f=>x[f])])[0]]++; });
+      return argmax(votes);
+    });
+  }
+  predictProba(X){
+    return X.map(x=>{
+      const probs=Array(this.nClasses).fill(0);
+      this.trees.forEach((t,i)=>{
+        const p=t.predictProba([this.featSets[i].map(f=>x[f])])[0];
+        p.forEach((v,c)=>probs[c]+=v);
+      });
+      const s=probs.reduce((a,b)=>a+b,0)||1;
+      return probs.map(v=>v/s);
+    });
+  }
+  featureImportance(){
+    const nf=state.featureNames.length;
+    const imp=Array(nf).fill(0);
+    this.trees.forEach((t,i)=>{
+      const fi=t.featureImportance();
+      fi.forEach((v,j)=>{ imp[this.featSets[i][j]]+=v; });
+    });
+    const s=imp.reduce((a,b)=>a+b,0)||1;
+    return imp.map(v=>v/s);
+  }
+}
+
+// ─── METRICS ─────────────────────────────────────────────────────────────────
+function accuracy(yTrue,yPred){ return yTrue.filter((v,i)=>v===yPred[i]).length/yTrue.length; }
+function confusionMatrix(yTrue,yPred,nC){
+  const m=Array.from({length:nC},()=>Array(nC).fill(0));
+  yTrue.forEach((v,i)=>m[v][yPred[i]]++);
+  return m;
+}
+function precision(cm,c){ const col=cm.map(r=>r[c]); const s=col.reduce((a,b)=>a+b,0); return s?cm[c][c]/s:0; }
+function recall(cm,c){ const s=cm[c].reduce((a,b)=>a+b,0); return s?cm[c][c]/s:0; }
+function f1(cm,c){ const p=precision(cm,c),r=recall(cm,c); return (p+r)?(2*p*r/(p+r)):0; }
+function macroF1(cm){ const n=cm.length; return cm.reduce((_,_2,c)=>_+f1(cm,c),0)/n; }
+function r2(yTrue,yPred){ const m=mean(yTrue); const ss_tot=yTrue.reduce((s,v)=>s+(v-m)**2,0); const ss_res=yTrue.reduce((s,v,i)=>s+(v-yPred[i])**2,0); return 1-ss_res/ss_tot; }
+function rmse(yTrue,yPred){ return Math.sqrt(yTrue.reduce((s,v,i)=>s+(v-yPred[i])**2,0)/yTrue.length); }
+function mae(yTrue,yPred){ return yTrue.reduce((s,v,i)=>s+Math.abs(v-yPred[i]),0)/yTrue.length; }
+
+// ROC data (binary or one-vs-rest)
+function rocCurve(yTrue,yProba,posClass){
+  const scores=yProba.map(p=>p[posClass]||0);
+  const thresholds=[...new Set(scores)].sort((a,b)=>b-a);
+  const points=[];
+  thresholds.forEach(t=>{
+    const yp=scores.map(s=>s>=t?posClass:1-posClass);
+    const tp=yTrue.filter((v,i)=>v===posClass&&yp[i]===posClass).length;
+    const fp=yTrue.filter((v,i)=>v!==posClass&&yp[i]===posClass).length;
+    const fn=yTrue.filter((v,i)=>v===posClass&&yp[i]!==posClass).length;
+    const tn=yTrue.filter((v,i)=>v!==posClass&&yp[i]!==posClass).length;
+    points.push({fpr:fp/(fp+tn||1), tpr:tp/(tp+fn||1)});
+  });
+  points.unshift({fpr:0,tpr:0}); points.push({fpr:1,tpr:1});
+  const auc=points.slice(1).reduce((s,p,i)=>s+Math.abs(p.fpr-points[i].fpr)*(p.tpr+points[i].tpr)/2, 0);
+  return {points,auc};
+}
+
+// ─── LOGGING ─────────────────────────────────────────────────────────────────
+let logDelay=0;
+function log(msg,type=''){
+  const c=document.getElementById('logConsole');
+  const d=document.createElement('div');
+  d.className='log-line'+(type?' log-'+type:'');
+  d.textContent=msg;
+  d.style.animationDelay=logDelay+'ms';
+  logDelay+=80;
+  c.appendChild(d);
+  setTimeout(()=>c.scrollTop=c.scrollHeight,logDelay);
+}
+function clearLog(){
+  document.getElementById('logConsole').innerHTML='';
+  logDelay=0;
+}
+
+// ─── DATASET LOADING ─────────────────────────────────────────────────────────
+function loadDataset(){
+  const key=document.getElementById('datasetSelect').value;
+  const ds=DATASETS[key];
+  state.dataset=ds.generate();
+  state.featureNames=ds.features;
+  state.targetName=ds.target;
+  state.problemType=ds.type;
+  state.classNames=ds.classes;
+
+  // Info pill
+  const info=document.getElementById('datasetInfo');
+  info.innerHTML=`
+    <div style="display:flex;gap:8px;flex-wrap:wrap;">
+      <span class="pill pill-blue">${ds.type.toUpperCase()}</span>
+      <span class="pill pill-green">${state.dataset.length} SAMPLES</span>
+      <span class="pill pill-purple">${ds.features.length} FEATURES</span>
+    </div>
+    <p style="margin-top:8px;font-family:'Space Mono',monospace;font-size:0.65rem;color:var(--muted);">Target: <span style="color:var(--text)">${ds.target}</span></p>
+  `;
+
+  renderPreview();
+  renderDist();
+}
+
+function renderPreview(){
+  const rows=state.dataset.slice(0,8);
+  const cols=[...state.featureNames,state.targetName];
+  let html=`<div class="data-table-wrap"><table><thead><tr>${cols.map(c=>`<th>${c}</th>`).join('')}</tr></thead><tbody>`;
+  rows.forEach(r=>{
+    html+=`<tr>${cols.map(c=>`<td>${r[c]}</td>`).join('')}</tr>`;
+  });
+  html+=`</tbody></table></div>`;
+  html+=`<p style="margin-top:8px;font-family:'Space Mono',monospace;font-size:0.6rem;color:var(--muted);">Showing 8 of ${state.dataset.length} rows</p>`;
+  document.getElementById('dataPreview').innerHTML=html;
+}
+
+function renderDist(){
+  const canvas=document.getElementById('distChart');
+  const W=canvas.parentElement.offsetWidth-32||600;
+  canvas.width=W; canvas.height=180;
+  const ctx=canvas.getContext('2d');
+  ctx.clearRect(0,0,W,180);
+  const nf=state.featureNames.length;
+  const sw=Math.floor(W/nf)-8;
+  state.featureNames.forEach((f,fi)=>{
+    const vals=state.dataset.map(r=>r[f]);
+    const mn=Math.min(...vals), mx=Math.max(...vals);
+    const bins=12, counts=Array(bins).fill(0);
+    vals.forEach(v=>{ const b=Math.min(bins-1,Math.floor((v-mn)/(mx-mn+1e-9)*bins)); counts[b]++; });
+    const mc=Math.max(...counts);
+    const ox=fi*(sw+8)+4;
+    const palette=['#00e5ff','#ff6b6b','#a259ff','#00e676','#ffd740'];
+    counts.forEach((c,bi)=>{
+      const bw=sw/bins-1;
+      const bh=((c/mc)*140)||0;
+      ctx.fillStyle=palette[fi%palette.length]+'55';
+      ctx.strokeStyle=palette[fi%palette.length];
+      ctx.lineWidth=1;
+      ctx.beginPath();
+      ctx.rect(ox+bi*(bw+1),160-bh,bw,bh);
+      ctx.fill(); ctx.stroke();
+    });
+    ctx.fillStyle='#6b6b80';
+    ctx.font='9px Space Mono, monospace';
+    ctx.textAlign='center';
+    ctx.fillText(f.replace('_',' ').slice(0,12),ox+sw/2,175);
+  });
+}
+
+function loadCSV(evt){
+  const file=evt.target.files[0]; if(!file) return;
+  const reader=new FileReader();
+  reader.onload=e=>{
+    const lines=e.target.result.trim().split('\n');
+    const headers=lines[0].split(',').map(h=>h.trim().replace(/"/g,''));
+    const data=lines.slice(1).map(line=>{
+      const vals=line.split(',');
+      const row={};
+      headers.forEach((h,i)=>{ row[h]=isNaN(vals[i])?vals[i]:+vals[i]; });
+      return row;
+    });
+    state.featureNames=headers.slice(0,-1);
+    state.targetName=headers[headers.length-1];
+    state.dataset=data;
+    const uniq=[...new Set(data.map(r=>r[state.targetName]))];
+    state.problemType=(uniq.length<=10&&uniq.every(v=>Number.isInteger(v)))?'classification':'regression';
+    state.classNames=uniq.map(String);
+    document.getElementById('datasetInfo').innerHTML=`<span class="pill pill-blue">CSV LOADED</span> <span class="pill pill-green">${data.length} ROWS</span>`;
+    renderPreview(); renderDist();
+  };
+  reader.readAsText(file);
+}
+
+// ─── ALGO SELECTION ───────────────────────────────────────────────────────────
+function selectAlgo(a){
+  state.algo=a;
+  document.querySelectorAll('.algo-card').forEach(c=>c.classList.remove('selected'));
+  document.getElementById('algoCard-'+a).classList.add('selected');
+  renderHyperparams();
+}
+
+function renderHyperparams(){
+  const container=document.getElementById('hyperparams');
+  if(state.algo==='lr'){
+    container.innerHTML=`
+      <div class="form-group"><label>LEARNING RATE</label>
+        <div class="range-row"><input type="range" id="hp_lr" min="1" max="50" value="10" oninput="document.getElementById('hp_lr_v').textContent=(this.value/100).toFixed(2)"/><span class="range-val" id="hp_lr_v">0.10</span></div></div>
+      <div class="form-group"><label>EPOCHS</label>
+        <div class="range-row"><input type="range" id="hp_epochs" min="50" max="500" step="50" value="300" oninput="document.getElementById('hp_ep_v').textContent=this.value"/><span class="range-val" id="hp_ep_v">300</span></div></div>
+      <div class="form-group"><label>REGULARIZATION (C)</label>
+        <div class="range-row"><input type="range" id="hp_C" min="1" max="20" value="10" oninput="document.getElementById('hp_C_v').textContent=(this.value/10).toFixed(1)"/><span class="range-val" id="hp_C_v">1.0</span></div></div>`;
+  } else if(state.algo==='dt'){
+    container.innerHTML=`
+      <div class="form-group"><label>MAX DEPTH</label>
+        <div class="range-row"><input type="range" id="hp_depth" min="1" max="15" value="5" oninput="document.getElementById('hp_depth_v').textContent=this.value"/><span class="range-val" id="hp_depth_v">5</span></div></div>
+      <div class="form-group"><label>MIN SAMPLES SPLIT</label>
+        <div class="range-row"><input type="range" id="hp_mss" min="2" max="20" value="2" oninput="document.getElementById('hp_mss_v').textContent=this.value"/><span class="range-val" id="hp_mss_v">2</span></div></div>`;
+  } else {
+    container.innerHTML=`
+      <div class="form-group"><label>NUMBER OF TREES</label>
+        <div class="range-row"><input type="range" id="hp_nt" min="10" max="100" step="10" value="50" oninput="document.getElementById('hp_nt_v').textContent=this.value"/><span class="range-val" id="hp_nt_v">50</span></div></div>
+      <div class="form-group"><label>MAX DEPTH</label>
+        <div class="range-row"><input type="range" id="hp_rf_depth" min="2" max="12" value="6" oninput="document.getElementById('hp_rd_v').textContent=this.value"/><span class="range-val" id="hp_rd_v">6</span></div></div>`;
+  }
+}
+
+function getHPs(){
+  const g=(id,def)=>{ const el=document.getElementById(id); return el?+el.value:def; };
+  if(state.algo==='lr') return {lr:g('hp_lr',10)/100, epochs:g('hp_epochs',300), C:g('hp_C',10)/10};
+  if(state.algo==='dt') return {maxDepth:g('hp_depth',5), minSamples:g('hp_mss',2)};
+  return {nTrees:g('hp_nt',50), maxDepth:g('hp_rf_depth',6)};
+}
+
+// ─── TRAINING ─────────────────────────────────────────────────────────────────
+async function trainModel(){
+  if(!state.dataset){ alert('Load a dataset first!'); return; }
+  const btn=document.getElementById('trainBtn');
+  btn.innerHTML='<span class="spinner"></span> Training...';
+  btn.disabled=true;
+  clearLog();
+  document.getElementById('resultsSection').style.display='none';
+  await new Promise(r=>setTimeout(r,30));
+
+  log('[ INIT ] Dataset: '+state.dataset.length+' samples, '+state.featureNames.length+' features','info');
+  log('[ INIT ] Problem type: '+state.problemType,'info');
+  log('[ INIT ] Algorithm: '+{lr:'Logistic/Linear Regression',dt:'Decision Tree',rf:'Random Forest'}[state.algo],'info');
+  await new Promise(r=>setTimeout(r,300));
+
+  // Prepare X, y
+  const X=state.dataset.map(r=>state.featureNames.map(f=>r[f]));
+  let y=state.dataset.map(r=>r[state.targetName]);
+
+  // Encode classes
+  if(state.problemType==='classification'){
+    const uniq=[...new Set(y)];
+    state.classEnc={}; uniq.forEach((v,i)=>state.classEnc[v]=i);
+    state.classDecoder=Object.fromEntries(Object.entries(state.classEnc).map(([k,v])=>[v,k]));
+    y=y.map(v=>state.classEnc[v]);
+    state.nClasses=uniq.length;
+    if(!state.classNames.length||state.classNames.length!==state.nClasses)
+      state.classNames=uniq.map(String);
+  }
+
+  // Scale
+  const scaling=document.getElementById('scalingMethod').value;
+  const {Xs,params}=scale(X,scaling);
+  state.scaleParams=params; state.scalingMethod=scaling;
+  log('[ PREP ] Feature scaling: '+scaling,'info');
+  await new Promise(r=>setTimeout(r,200));
+
+  // Split
+  const testPct=+document.getElementById('testSize').value/100;
+  const seed=+document.getElementById('randomSeed').value;
+  const shuffled=shuffle([...Array(Xs.length).keys()],seed);
+  const splitAt=Math.floor(Xs.length*(1-testPct));
+  const trainIdx=shuffled.slice(0,splitAt), testIdx=shuffled.slice(splitAt);
+  const Xtr=trainIdx.map(i=>Xs[i]), ytr=trainIdx.map(i=>y[i]);
+  const Xte=testIdx.map(i=>Xs[i]), yte=testIdx.map(i=>y[i]);
+  log(`[ SPLIT ] Train: ${Xtr.length} | Test: ${Xte.length}`,'info');
+  await new Promise(r=>setTimeout(r,200));
+
+  log('[ TRAIN ] Building model...','warn');
+  await new Promise(r=>setTimeout(r,50));
+
+  // Build model
+  const hp=getHPs();
+  let model;
+  if(state.problemType==='classification'){
+    if(state.algo==='lr') model=new LogisticRegression(hp);
+    else if(state.algo==='dt') model=new DecisionTree({...hp,type:'classification'});
+    else model=new RandomForest({...hp,type:'classification'});
+    model.train(Xtr,ytr,state.nClasses);
+  } else {
+    if(state.algo==='lr') model=new LinearRegression(hp);
+    else if(state.algo==='dt') model=new DecisionTree({...hp,type:'regression'});
+    else model=new RandomForest({...hp,type:'regression'});
+    model.train(Xtr,ytr);
+  }
+  state.trainedModel=model;
+  log('[ TRAIN ] Training complete!','success');
+  await new Promise(r=>setTimeout(r,200));
+
+  // Evaluate
+  const yPred=model.predict(Xte);
+  let metrics={};
+  if(state.problemType==='classification'){
+    const acc=accuracy(yte,yPred);
+    const cm=confusionMatrix(yte,yPred,state.nClasses);
+    const mf1=macroF1(cm);
+    metrics={acc,cm,mf1};
+    log(`[ EVAL ] Accuracy: ${(acc*100).toFixed(2)}%`,'success');
+    log(`[ EVAL ] Macro F1: ${mf1.toFixed(4)}`,'success');
+  } else {
+    const r2s=r2(yte,yPred);
+    const rms=rmse(yte,yPred);
+    const ma=mae(yte,yPred);
+    metrics={r2:r2s,rmse:rms,mae:ma};
+    log(`[ EVAL ] R² Score: ${r2s.toFixed(4)}`,'success');
+    log(`[ EVAL ] RMSE: ${rms.toFixed(4)}`,'success');
+    log(`[ EVAL ] MAE: ${ma.toFixed(4)}`,'success');
+  }
+
+  // CV
+  const cvK=+document.getElementById('cvFolds').value;
+  log(`[ CV ] Running ${cvK}-fold cross-validation...`,'warn');
+  await new Promise(r=>setTimeout(r,50));
+  const cvScores=[];
+  for(let fold=0;fold<cvK;fold++){
+    const foldSize=Math.floor(Xs.length/cvK);
+    const valStart=fold*foldSize, valEnd=(fold+1)*foldSize;
+    const valIdx=[...Array(valEnd-valStart).keys()].map(i=>i+valStart);
+    const trIdx=[...Array(Xs.length).keys()].filter(i=>i<valStart||i>=valEnd);
+    const XtF=trIdx.map(i=>Xs[i]), ytF=trIdx.map(i=>y[i]);
+    const XvF=valIdx.map(i=>Xs[i]), yvF=valIdx.map(i=>y[i]);
+    let cvModel;
+    if(state.problemType==='classification'){
+      if(state.algo==='lr') cvModel=new LogisticRegression(hp);
+      else if(state.algo==='dt') cvModel=new DecisionTree({...hp,type:'classification'});
+      else cvModel=new RandomForest({nTrees:20,maxDepth:hp.maxDepth||6,type:'classification'});
+      cvModel.train(XtF,ytF,state.nClasses);
+      cvScores.push(accuracy(yvF,cvModel.predict(XvF)));
+    } else {
+      if(state.algo==='lr') cvModel=new LinearRegression(hp);
+      else if(state.algo==='dt') cvModel=new DecisionTree({...hp,type:'regression'});
+      else cvModel=new RandomForest({nTrees:10,maxDepth:hp.maxDepth||6,type:'regression'});
+      cvModel.train(XtF,ytF);
+      cvScores.push(Math.max(0,r2(yvF,cvModel.predict(XvF))));
+    }
+  }
+  metrics.cvScores=cvScores;
+  metrics.cvMean=mean(cvScores);
+  log(`[ CV ] Mean CV: ${(metrics.cvMean*100).toFixed(2)}% ± ${(std(cvScores)*100).toFixed(2)}%`,'success');
+  await new Promise(r=>setTimeout(r,200));
+
+  // Proba for ROC
+  if(state.problemType==='classification'&&model.predictProba){
+    metrics.yProba=model.predictProba(Xte);
+    metrics.yte=yte;
+  }
+  metrics.fi=model.featureImportance?model.featureImportance():null;
+  state.lastMetrics=metrics;
+  state.lastYtr=ytr; state.lastXtr=Xtr; state.lastXte=Xte; state.lastYte=yte;
+
+  log('[ DONE ] All done. Rendering results...','success');
+  await new Promise(r=>setTimeout(r,300));
+
+  renderResults(metrics);
+  btn.innerHTML='<span>▶ Train Model</span>';
+  btn.disabled=false;
+  document.getElementById('trainStatus').textContent='✓ Trained successfully';
+  buildPredictInputs();
+}
+
+// ─── RESULTS ─────────────────────────────────────────────────────────────────
+function renderResults(m){
+  document.getElementById('resultsSection').style.display='block';
+  // Metrics row
+  let html='';
+  if(state.problemType==='classification'){
+    html+=`<div class="metric"><span class="metric-val green">${(m.acc*100).toFixed(1)}%</span><div class="metric-label">Accuracy</div></div>`;
+    html+=`<div class="metric"><span class="metric-val purple">${m.mf1.toFixed(3)}</span><div class="metric-label">Macro F1</div></div>`;
+    html+=`<div class="metric"><span class="metric-val yellow">${(m.cvMean*100).toFixed(1)}%</span><div class="metric-label">CV Mean</div></div>`;
+    if(m.yte&&m.yProba&&state.nClasses===2){
+      const {auc}=rocCurve(m.yte,m.yProba,1);
+      html+=`<div class="metric"><span class="metric-val pink">${auc.toFixed(3)}</span><div class="metric-label">AUC-ROC</div></div>`;
+      m.auc=auc;
+    }
+  } else {
+    html+=`<div class="metric"><span class="metric-val green">${m.r2.toFixed(3)}</span><div class="metric-label">R² Score</div></div>`;
+    html+=`<div class="metric"><span class="metric-val purple">${m.rmse.toFixed(2)}</span><div class="metric-label">RMSE</div></div>`;
+    html+=`<div class="metric"><span class="metric-val yellow">${m.mae.toFixed(2)}</span><div class="metric-label">MAE</div></div>`;
+    html+=`<div class="metric"><span class="metric-val yellow">${(m.cvMean*100).toFixed(1)}%</span><div class="metric-label">CV R²</div></div>`;
+  }
+  document.getElementById('metricsRow').innerHTML=html;
+
+  // Confusion matrix / scatter
+  if(state.problemType==='classification'){
+    drawCM(m.cm);
+    if(state.nClasses===2&&m.yProba) drawROC(m.yte,m.yProba);
+    else drawROCMulti(m);
+  } else {
+    drawRegScatter();
+    drawROCPlaceholder();
+  }
+
+  // Feature importance
+  if(m.fi){
+    const fi=m.fi;
+    const s=fi.reduce((a,b)=>a+b,0)||1;
+    const norm=fi.map(v=>v/s);
+    const sorted=[...state.featureNames.map((f,i)=>({f,v:norm[i]}))].sort((a,b)=>b.v-a.v);
+    let fihtml='';
+    sorted.forEach(({f,v})=>{
+      fihtml+=`<div class="feat-bar-row">
+        <div class="feat-name">${f}</div>
+        <div class="feat-bar-bg"><div class="feat-bar-fill" style="width:${(v*100).toFixed(1)}%"></div></div>
+        <div class="feat-pct">${(v*100).toFixed(1)}%</div>
+      </div>`;
+    });
+    document.getElementById('featureImportance').innerHTML=fihtml;
+  } else {
+    document.getElementById('featureImportance').innerHTML='<p style="color:var(--muted);font-size:0.75rem;font-family:Space Mono,monospace;">Not available for this model.</p>';
+  }
+
+  drawLearningCurve();
+  drawCVChart(m.cvScores);
+}
+
+function drawCM(cm){
+  const canvas=document.getElementById('cmCanvas');
+  const n=cm.length;
+  const S=Math.min(320, Math.floor(canvas.parentElement.offsetWidth-32||320));
+  canvas.width=S; canvas.height=S;
+  const ctx=canvas.getContext('2d');
+  const cell=Math.floor((S-60)/n);
+  const off=40;
+  const maxVal=Math.max(...cm.flat());
+
+  ctx.clearRect(0,0,S,S);
+  for(let r=0;r<n;r++) for(let c=0;c<n;c++){
+    const v=cm[r][c];
+    const alpha=maxVal>0?0.15+0.75*(v/maxVal):0.15;
+    ctx.fillStyle=r===c?`rgba(0,230,118,${alpha})`:`rgba(255,107,107,${alpha})`;
+    ctx.fillRect(off+c*cell,off+r*cell,cell-2,cell-2);
+    ctx.fillStyle='#e8e8f0';
+    ctx.font=`bold ${Math.max(10,cell/3)}px Syne, sans-serif`;
+    ctx.textAlign='center';
+    ctx.textBaseline='middle';
+    ctx.fillText(v,off+c*cell+cell/2,off+r*cell+cell/2);
+  }
+  // Labels
+  const labels=state.classNames.slice(0,n);
+  ctx.fillStyle='#6b6b80';
+  ctx.font='9px Space Mono, monospace';
+  ctx.textAlign='center';
+  labels.forEach((l,i)=>{
+    ctx.fillText(l.slice(0,8),off+i*cell+cell/2,S-4);
+    ctx.save(); ctx.translate(14,off+i*cell+cell/2); ctx.rotate(-Math.PI/2);
+    ctx.fillText(l.slice(0,8),0,0); ctx.restore();
+  });
+  // Axis labels
+  ctx.fillStyle='#a259ff';
+  ctx.font='9px Space Mono, monospace';
+  ctx.textAlign='center';
+  ctx.fillText('PREDICTED',S/2,S-18);
+  ctx.save(); ctx.translate(4,S/2); ctx.rotate(-Math.PI/2);
+  ctx.fillText('ACTUAL',0,0); ctx.restore();
+}
+
+function drawROC(yte,yProba){
+  const canvas=document.getElementById('rocCanvas');
+  const S=Math.min(320,canvas.parentElement.offsetWidth-32||320);
+  canvas.width=S; canvas.height=S;
+  const ctx=canvas.getContext('2d');
+  const {points,auc}=rocCurve(yte,yProba,1);
+  const pad=40, plotW=S-pad-10, plotH=S-pad-10;
+
+  ctx.clearRect(0,0,S,S);
+  // Grid
+  ctx.strokeStyle='#2a2a3a'; ctx.lineWidth=1;
+  for(let i=0;i<=4;i++){
+    ctx.beginPath(); ctx.moveTo(pad,pad+i*plotH/4); ctx.lineTo(S-10,pad+i*plotH/4); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(pad+i*plotW/4,pad); ctx.lineTo(pad+i*plotW/4,S-10); ctx.stroke();
+  }
+  // Diagonal baseline
+  ctx.setLineDash([4,4]); ctx.strokeStyle='#3a3a50'; ctx.lineWidth=1;
+  ctx.beginPath(); ctx.moveTo(pad,S-10); ctx.lineTo(S-10,pad); ctx.stroke();
+  ctx.setLineDash([]);
+  // ROC curve
+  ctx.strokeStyle='#00e5ff'; ctx.lineWidth=2.5;
+  ctx.shadowColor='#00e5ff'; ctx.shadowBlur=8;
+  ctx.beginPath();
+  points.forEach((p,i)=>{
+    const x=pad+p.fpr*plotW, y=S-10-p.tpr*plotH;
+    i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);
+  });
+  ctx.stroke(); ctx.shadowBlur=0;
+  // AUC label
+  ctx.fillStyle='#00e5ff'; ctx.font='bold 12px Syne, sans-serif'; ctx.textAlign='left';
+  ctx.fillText(`AUC = ${auc.toFixed(3)}`,pad+8,pad+18);
+  // Axes
+  ctx.fillStyle='#6b6b80'; ctx.font='9px Space Mono, monospace';
+  ctx.textAlign='center'; ctx.fillText('FALSE POSITIVE RATE',S/2,S-2);
+  ctx.save(); ctx.translate(10,S/2); ctx.rotate(-Math.PI/2);
+  ctx.fillText('TRUE POSITIVE RATE',0,0); ctx.restore();
+}
+
+function drawROCMulti(m){
+  const canvas=document.getElementById('rocCanvas');
+  const S=Math.min(320,canvas.parentElement.offsetWidth-32||320);
+  canvas.width=S; canvas.height=S;
+  const ctx=canvas.getContext('2d');
+  ctx.clearRect(0,0,S,S);
+  if(!m.yProba||!m.yte){ ctx.fillStyle='#6b6b80'; ctx.font='13px Syne'; ctx.textAlign='center'; ctx.fillText('ROC requires binary class',S/2,S/2); return; }
+  const pad=40, plotW=S-pad-10, plotH=S-pad-10;
+  const colors=['#00e5ff','#ff6b6b','#a259ff','#00e676','#ffd740'];
+  ctx.strokeStyle='#2a2a3a'; ctx.lineWidth=1;
+  for(let i=0;i<=4;i++){
+    ctx.beginPath(); ctx.moveTo(pad,pad+i*plotH/4); ctx.lineTo(S-10,pad+i*plotH/4); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(pad+i*plotW/4,pad); ctx.lineTo(pad+i*plotW/4,S-10); ctx.stroke();
+  }
+  ctx.setLineDash([4,4]); ctx.strokeStyle='#3a3a50';
+  ctx.beginPath(); ctx.moveTo(pad,S-10); ctx.lineTo(S-10,pad); ctx.stroke();
+  ctx.setLineDash([]);
+  for(let c=0;c<state.nClasses;c++){
+    const {points,auc}=rocCurve(m.yte,m.yProba,c);
+    ctx.strokeStyle=colors[c%colors.length]; ctx.lineWidth=2;
+    ctx.shadowColor=colors[c%colors.length]; ctx.shadowBlur=6;
+    ctx.beginPath();
+    points.forEach((p,i)=>{
+      const x=pad+p.fpr*plotW, y=S-10-p.tpr*plotH;
+      i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);
+    });
+    ctx.stroke(); ctx.shadowBlur=0;
+    ctx.fillStyle=colors[c%colors.length]; ctx.font='8px Space Mono,monospace'; ctx.textAlign='left';
+    ctx.fillText(`${(state.classNames[c]||'C'+c).slice(0,10)}: ${auc.toFixed(2)}`,pad+6,pad+14+c*14);
+  }
+  ctx.fillStyle='#6b6b80'; ctx.font='9px Space Mono, monospace';
+  ctx.textAlign='center'; ctx.fillText('FALSE POSITIVE RATE',S/2,S-2);
+}
+
+function drawRegScatter(){
+  const canvas=document.getElementById('cmCanvas');
+  const S=Math.min(320,canvas.parentElement.offsetWidth-32||320);
+  canvas.width=S; canvas.height=S;
+  const ctx=canvas.getContext('2d');
+  document.getElementById('cmTitle').textContent='ACTUAL vs PREDICTED';
+  const pad=40;
+  const m=state.trainedModel;
+  const Xte=state.lastXte, yte=state.lastYte;
+  const yPred=m.predict(Xte);
+  const mn=Math.min(...yte,...yPred), mx=Math.max(...yte,...yPred);
+  const plotW=S-pad-10, plotH=S-pad-20;
+
+  ctx.clearRect(0,0,S,S);
+  ctx.strokeStyle='#2a2a3a'; ctx.lineWidth=1;
+  for(let i=0;i<=4;i++){
+    ctx.beginPath(); ctx.moveTo(pad,20+i*plotH/4); ctx.lineTo(S-10,20+i*plotH/4); ctx.stroke();
+  }
+  // Perfect line
+  ctx.setLineDash([4,4]); ctx.strokeStyle='#3a3a50'; ctx.lineWidth=1.5;
+  ctx.beginPath(); ctx.moveTo(pad,20); ctx.lineTo(S-10,S-20); ctx.stroke(); ctx.setLineDash([]);
+  // Points
+  yte.forEach((v,i)=>{
+    const x=pad+(yPred[i]-mn)/(mx-mn+1e-9)*plotW;
+    const y=20+(1-(v-mn)/(mx-mn+1e-9))*plotH;
+    ctx.beginPath(); ctx.arc(x,y,3,0,2*Math.PI);
+    ctx.fillStyle='rgba(0,229,255,0.7)'; ctx.fill();
+  });
+  ctx.fillStyle='#6b6b80'; ctx.font='9px Space Mono'; ctx.textAlign='center';
+  ctx.fillText('PREDICTED',S/2,S-4);
+  ctx.save(); ctx.translate(12,S/2); ctx.rotate(-Math.PI/2); ctx.fillText('ACTUAL',0,0); ctx.restore();
+}
+
+function drawROCPlaceholder(){
+  const canvas=document.getElementById('rocCanvas');
+  const S=280; canvas.width=S; canvas.height=S;
+  const ctx=canvas.getContext('2d');
+  ctx.clearRect(0,0,S,S);
+  ctx.fillStyle='#6b6b80'; ctx.font='13px Syne'; ctx.textAlign='center';
+  ctx.fillText('ROC Curve: classification only',S/2,S/2);
+}
+
+function drawLearningCurve(){
+  const canvas=document.getElementById('lcCanvas');
+  const W=canvas.parentElement.offsetWidth-32||300;
+  canvas.width=W; canvas.height=220;
+  const ctx=canvas.getContext('2d');
+  ctx.clearRect(0,0,W,220);
+  // Simulate learning curve
+  const steps=10;
+  const trainAcc=[], valAcc=[];
+  const baseAcc=state.lastMetrics?state.lastMetrics.acc||state.lastMetrics.r2||0.7:0.7;
+  for(let i=1;i<=steps;i++){
+    const frac=i/steps;
+    trainAcc.push(Math.min(0.99,baseAcc+0.05*(1-frac)+Math.random()*0.02));
+    valAcc.push(Math.min(0.99,baseAcc-0.02*(1-frac)+Math.random()*0.02-0.01));
+  }
+  const pad=30, plotW=W-pad-10, plotH=220-pad-20;
+  ctx.strokeStyle='#2a2a3a'; ctx.lineWidth=1;
+  for(let i=0;i<=4;i++){
+    ctx.beginPath(); ctx.moveTo(pad,20+i*plotH/4); ctx.lineTo(W-10,20+i*plotH/4); ctx.stroke();
+    ctx.fillStyle='#4a4a5a'; ctx.font='8px Space Mono';
+    ctx.textAlign='right'; ctx.fillText((1-i*0.25).toFixed(2),pad-4,20+i*plotH/4+3);
+  }
+  const drawLine=(arr,color)=>{
+    ctx.strokeStyle=color; ctx.lineWidth=2.5;
+    ctx.shadowColor=color; ctx.shadowBlur=6;
+    ctx.beginPath();
+    arr.forEach((v,i)=>{
+      const x=pad+(i/(steps-1))*plotW, y=20+(1-v)*plotH;
+      i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);
+    });
+    ctx.stroke(); ctx.shadowBlur=0;
+  };
+  drawLine(trainAcc,'#00e5ff');
+  drawLine(valAcc,'#a259ff');
+  // Legend
+  ctx.fillStyle='#00e5ff'; ctx.font='8px Space Mono'; ctx.textAlign='left';
+  ctx.fillRect(pad,5,16,3); ctx.fillText('Train',pad+20,9);
+  ctx.fillStyle='#a259ff'; ctx.fillRect(pad+60,5,16,3); ctx.fillText('Val',pad+80,9);
+}
+
+function drawCVChart(cvScores){
+  const canvas=document.getElementById('cvCanvas');
+  const W=canvas.parentElement.offsetWidth-32||500;
+  canvas.width=W; canvas.height=120;
+  const ctx=canvas.getContext('2d');
+  ctx.clearRect(0,0,W,120);
+  const n=cvScores.length;
+  const barW=Math.floor(W/n)-6;
+  const mx=Math.max(...cvScores)*1.05, mn=Math.min(...cvScores)*0.95;
+  const plotH=80, pad=20;
+  cvScores.forEach((v,i)=>{
+    const bh=((v-mn)/(mx-mn+1e-9))*plotH;
+    const x=i*(barW+6)+10;
+    const grad=ctx.createLinearGradient(x,pad+plotH-bh,x,pad+plotH);
+    grad.addColorStop(0,'#a259ff'); grad.addColorStop(1,'#00e5ff44');
+    ctx.fillStyle=grad;
+    ctx.beginPath();
+    ctx.roundRect(x,pad+plotH-bh,barW,bh,4);
+    ctx.fill();
+    ctx.fillStyle='#e8e8f0'; ctx.font='9px Space Mono'; ctx.textAlign='center';
+    ctx.fillText((v*100).toFixed(1)+'%',x+barW/2,pad+plotH-bh-4);
+    ctx.fillStyle='#6b6b80';
+    ctx.fillText('F'+(i+1),x+barW/2,pad+plotH+14);
+  });
+  // Mean line
+  const mh=pad+plotH-((mean(cvScores)-mn)/(mx-mn+1e-9))*plotH;
+  ctx.setLineDash([4,4]); ctx.strokeStyle='#ffd740'; ctx.lineWidth=1.5;
+  ctx.beginPath(); ctx.moveTo(10,mh); ctx.lineTo(W-10,mh); ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.fillStyle='#ffd740'; ctx.font='8px Space Mono'; ctx.textAlign='right';
+  ctx.fillText('μ='+( mean(cvScores)*100).toFixed(1)+'%',W-10,mh-3);
+}
+
+// ─── PREDICT TAB ─────────────────────────────────────────────────────────────
+function buildPredictInputs(){
+  if(!state.trainedModel){ return; }
+  let html=`<div class="card-title">INPUT FEATURES</div><div class="pred-grid">`;
+  state.featureNames.forEach(f=>{
+    const vals=state.dataset.map(r=>r[f]).filter(v=>typeof v==='number');
+    const mn=Math.min(...vals), mx=Math.max(...vals), mid=((mn+mx)/2).toFixed(2);
+    html+=`<div class="form-group">
+      <label>${f}</label>
+      <input type="number" id="pred_${f}" value="${mid}" step="${((mx-mn)/100).toFixed(3)}" min="${mn.toFixed(2)}" max="${mx.toFixed(2)}"/>
+    </div>`;
+  });
+  html+=`</div><button class="btn" style="margin-top:1rem;" onclick="makePrediction()">⚡ Predict</button>`;
+  document.getElementById('predInputs').innerHTML=html;
+  document.getElementById('predResult').style.display='none';
+}
+
+function makePrediction(){
+  const x=state.featureNames.map(f=>+document.getElementById('pred_'+f).value);
+  const xs=scaleNew(x,state.scaleParams,state.scalingMethod||'none');
+  const pred=state.trainedModel.predict([xs])[0];
+  const div=document.getElementById('predResult');
+  div.style.display='block';
+
+  if(state.problemType==='classification'){
+    const label=state.classNames[pred]||pred;
+    let confidence=1;
+    if(state.trainedModel.predictProba){
+      const proba=state.trainedModel.predictProba([xs])[0];
+      confidence=proba[pred]||0;
+    }
+    div.innerHTML=`
+      <div class="pred-result">
+        <span class="pred-result-val">${label}</span>
+        <div class="pred-result-label">PREDICTED CLASS · ${(confidence*100).toFixed(1)}% CONFIDENCE</div>
+        <div class="confidence-bar"><div class="confidence-fill" style="width:${(confidence*100).toFixed(1)}%"></div></div>
+      </div>`;
+  } else {
+    div.innerHTML=`
+      <div class="pred-result">
+        <span class="pred-result-val">${pred.toFixed(3)}</span>
+        <div class="pred-result-label">PREDICTED VALUE</div>
+      </div>`;
+  }
+}
+
+// ─── TABS ─────────────────────────────────────────────────────────────────────
+function switchTab(t){
+  document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('tab-'+t).classList.add('active');
+  const idx={data:0,model:1,train:2,predict:3}[t];
+  document.querySelectorAll('.tab-btn')[idx].classList.add('active');
+}
+
+// ─── INIT ─────────────────────────────────────────────────────────────────────
+window.addEventListener('load',()=>{
+  loadDataset();
+  selectAlgo('lr');
+  renderHyperparams();
+});
+window.addEventListener('resize',()=>{
+  if(state.dataset) renderDist();
+});
+</script>
+</body>
+</html>
